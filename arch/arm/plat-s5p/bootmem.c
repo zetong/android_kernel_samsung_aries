@@ -81,7 +81,8 @@ void s5p_reserve_bootmem(struct s5p_media_device *mdevs, int nr_mdevs)
 {
 	struct s5p_media_device *mdev;
 	int i;
-
+	dma_addr_t mfc_paddr;
+	
 	media_devs = mdevs;
 	nr_media_devs = nr_mdevs;
 
@@ -89,7 +90,11 @@ void s5p_reserve_bootmem(struct s5p_media_device *mdevs, int nr_mdevs)
 		mdev = &media_devs[i];
 		if (mdev->memsize <= 0)
 			continue;
-
+		
+		if (!strcmp(mdev->name, "jpeg"))
+			mdev->paddr = mfc_paddr;
+		else
+		
 		if (mdev->paddr)
 			mdev->paddr = virt_to_phys(__alloc_bootmem(
 				mdev->memsize,
@@ -100,7 +105,9 @@ void s5p_reserve_bootmem(struct s5p_media_device *mdevs, int nr_mdevs)
 				mdev->memsize,
 				PAGE_SIZE,
 				meminfo.bank[mdev->bank].start));
-
+				
+		if (!strcmp(mdev->name, "mfc") && mdev->bank == 0)
+			mfc_paddr = mdev->paddr;
 		printk(KERN_INFO "s5pv210: %lu bytes system memory reserved "
 			"for %s at 0x%08x\n", (unsigned long) mdev->memsize,
 			mdev->name, mdev->paddr);
